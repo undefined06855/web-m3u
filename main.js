@@ -109,7 +109,7 @@ let server = Bun.serve({
                 if (!file.isFile()) continue;
                 if (!Bun.file(`${file.parentPath}/${file.name}`).type.startsWith("audio/")) continue;
 
-                assembler.addFile(`${CONFIG.domain}/${playlist}/${file.name}`);
+                assembler.addFile(`${CONFIG.domain}/${encodeURI(`${playlist}/${file.name}`)}`);
 
                 fileParsePromises.push(
                     mm.parseFile(`${file.parentPath}/${file.name}`, metadataConfig)
