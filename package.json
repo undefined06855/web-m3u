@@ -1,0 +1,17 @@
+{
+  "name": "web-m3u",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "change-case": "^5.4.4",
+    "music-metadata": "^11.12.3",
+    "sanitize-filename": "^1.6.4"
+  }
+}
