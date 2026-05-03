@@ -66,7 +66,7 @@ class M3uAssembler {
         output += "\n";
 
         for (let comment of this.comments) {
-            output += `${comment}\n`;
+            output += `#${comment}\n`;
         }
 
         output += "\n";
