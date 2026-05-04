@@ -1,6 +1,7 @@
 # web-m3u
 
-A self-hosted m3u generator for playlists!
+A self-hosted m3u generator for playlists! Supports album covers, genres, artists, albums and even generating shuffled
+playlists!
 
 Start by creating a folder called "music" and place folders containing audio files inside (which are your playlists).
 
@@ -21,6 +22,9 @@ it writes album covers to disk and parses song metadata! Subsequent requests sho
 and album covers will already be cached. It takes around **8 seconds** to parse a 220 song playlist on my server, but only
 **100ms** after everything is cached (including networking). This may take longer for servers with slow i/o (though Bun
 does read files pretty efficiently).
+- You can navigate to "playlistname&#x200B;**-shuffle**&#x200B;.m3u" to generate an m3u that is automatically shuffled! Else, playlists
+are sorted in alphabetical order of the filename.
+- The .m3u extension is optional, "playlistname" and "playlistname.m3u" will both return the same results.
 
 Many apps should be able to read `.m3u` files (including just Windows Media Player), though I've found (on mobile) VLC
 works the best, and shows album covers from the `EXTALBUMARTURL` directive:

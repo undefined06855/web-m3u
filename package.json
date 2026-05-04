@@ -4,16 +4,14 @@
   "type": "module",
   "version": "v1.0.0",
   "private": true,
-
   "devDependencies": {
     "@types/bun": "latest"
   },
-
   "peerDependencies": {
     "typescript": "^5"
   },
-
   "dependencies": {
+    "array-shuffle": "^4.1.0",
     "change-case": "^5.4.4",
     "mime": "^4.1.0",
     "music-metadata": "^11.12.3",
