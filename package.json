@@ -1,14 +1,18 @@
 {
   "name": "web-m3u",
-  "module": "index.ts",
+  "module": "main.js",
   "type": "module",
+  "version": "v1.0.0",
   "private": true,
+
   "devDependencies": {
     "@types/bun": "latest"
   },
+
   "peerDependencies": {
     "typescript": "^5"
   },
+
   "dependencies": {
     "change-case": "^5.4.4",
     "mime": "^4.1.0",
