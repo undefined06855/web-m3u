@@ -22,6 +22,11 @@ and album covers will already be cached. It takes around **8 seconds** to parse 
 **100ms** after everything is cached (including networking). This may take longer for servers with slow i/o (though Bun
 does read files pretty efficiently).
 
+Many apps should be able to read `.m3u` files (including just Windows Media Player), though I've found (on mobile) VLC
+works the best, and shows album covers from the `EXTALBUMARTURL` directive:
+
+<img src="images/vlc.png" alt="screenshot of vlc media player on mobile showing my frankly awesome playlist" height=700/>
+
 ## Hosting
 
 Personally, I am hosting this in just a simple tmux session, but more properly a Docker image can be used such as
