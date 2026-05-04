@@ -81,7 +81,6 @@ let server = Bun.serve({
                     // the cache file is made up of m3u tags and other data
                     // make sure to delete the other data keys so that they don't get improperly added as m3u tags
                     if (metadata.artists) { artists.push(...metadata.artists); delete metadata.artists; }
-                    if (metadata.artist) { artists.push(metadata.artist); delete metadata.artist; }
                     if (metadata.album) { albums.push(metadata.album); delete metadata.album; }
                     if (metadata.genre) { genres.push(...metadata.genre); delete metadata.genre; }
 
@@ -92,7 +91,6 @@ let server = Bun.serve({
                         musicMetadata.parseFile(`${file.parentPath}/${file.name}`, metadataConfig)
                             .then(async metadata => {
                                 let m3uMetadata = {};
-                                if (metadata.common.artist) artists.push(metadata.common.artist);
                                 if (metadata.common.artists) artists.push(...metadata.common.artists);
                                 if (metadata.common.album) albums.push(metadata.common.album);
                                 if (metadata.common.genre) genres.push(...metadata.common.genre);
@@ -101,8 +99,8 @@ let server = Bun.serve({
                                 m3uMetadata["EXTBYT"] = `${bunFile.size}`;
 
                                 if (metadata.common.title) {
-                                    if (metadata.common.artist) {
-                                        m3uMetadata["EXTINF"] += `,${metadata.common.artist} - ${metadata.common.title}`;
+                                    if (metadata.common.artists) {
+                                        m3uMetadata["EXTINF"] += `,${metadata.common.artists.join(", ")} - ${metadata.common.title}`;
                                     } else {
                                         m3uMetadata["EXTINF"] += `,${metadata.common.title}`;
                                     }
@@ -127,7 +125,6 @@ let server = Bun.serve({
                                 // repeated again
                                 let cacheData = { ...m3uMetadata };
 
-                                if (metadata.common.artist) cacheData.artist = metadata.common.artist;
                                 if (metadata.common.artists) cacheData.artists = metadata.common.artists;
                                 if (metadata.common.album) cacheData.album = metadata.common.album;
                                 if (metadata.common.genre) cacheData.genre = metadata.common.genre;
