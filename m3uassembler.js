@@ -33,7 +33,7 @@ export default class M3uAssembler {
     }
 
     /**
-     * Adds a file to the end of the .m3u file. Does not support per-file metadata.
+     * Adds a file to the end of the .m3u file.
      * @param {string} path
      * @param {Record<string, string>} [metadata={}]
      */
