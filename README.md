@@ -22,6 +22,28 @@ and album covers will already be cached. It takes around **8 seconds** to parse 
 **100ms** after everything is cached (including networking). This may take longer for servers with slow i/o (though Bun
 does read files pretty efficiently).
 
+## Hosting
+
+Personally, I am hosting this in just a simple tmux session, but more properly a Docker image can be used such as
+[oven/bun](https://hub.docker.com/r/oven/bun).
+
+An example `docker-compose.yml` is below:
+```yml
+services:
+  web-m3u:
+    image: oven/bun:latest
+    container_name: bun-app
+    working_dir: /app
+
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+      - ~/my-music:/app/music
+
+    command: bun main
+```
+
 ## Example Setup
 
 With a folder structure as follows:
