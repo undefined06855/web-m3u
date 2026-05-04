@@ -91,7 +91,7 @@ let server = Bun.serve({
                     if (metadata.album) { albums.push(metadata.album); delete metadata.album; }
                     if (metadata.genre) { genres.push(...metadata.genre); delete metadata.genre; }
 
-                    assembler.addFile(`${config.Generation.domain}/${encodeURI(`${playlist}/${file.name}`)}`, metadata);
+                    assembler.addFile(`${config.Generation.domain}/${encodeURIComponent(`${playlist}/${file.name}`)}`, metadata);
                 } else {
                     // we don't have cache, add to a list of promises and parse with music-metadata
                     fileParsePromises.push(

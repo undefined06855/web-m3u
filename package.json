@@ -2,7 +2,7 @@
   "name": "web-m3u",
   "module": "main.js",
   "type": "module",
-  "version": "v1.0.1",
+  "version": "v1.0.2",
   "private": true,
   "devDependencies": {
     "@types/bun": "latest"
