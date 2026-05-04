@@ -96,6 +96,12 @@ The `config.json` shown in Epic Playlist can contain the following information (
 }
 ```
 
+## Contributing
+
+No AI-generated code is in this repository, and I intend to keep it that way. Contributions may be lightly AI assisted,
+but cannot include large chunks of AI generated code. Contributions should aim for 120 columns for comments, and similar
+code styling in terms of formatting.
+
 ---
 
 This project was created using `bun init` in bun v1.3.12. [Bun](https://bun.com) is a fast all-in-one JavaScript
