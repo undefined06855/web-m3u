@@ -4,8 +4,11 @@
  */
 export default class M3uAssembler {
     constructor() {
+        /** @type {Record<string, string>} */
         this.metadata = {};
+        /** @type {Array<Record<string, string>>} */
         this.comments = [];
+        /** @type {Array<{path: string, metadata: Record<string, any>}>} */
         this.files = [];
     }
 
