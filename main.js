@@ -1,83 +1,12 @@
 import * as fs from "fs/promises"
 
-import * as cc from "change-case"
-import * as mm from "music-metadata"
-
+import * as changeCase from "change-case"
+import * as musicMetadata from "music-metadata"
+import mime from "mime"
 import sanitize from "sanitize-filename";
+import M3uAssembler from "./m3uassembler";
 
-
-const CONFIG = {
-    port: process.env.PORT ?? 8080,
-    domain: process.env.DOMAIN ?? "http://localhost:8080",
-    development: (process.env.DEVELOPMENT ?? "true") != "false"
-}
-
-/**
- * @class M3uAssembler
- * @description Naively assembles an m3u file from provided metadata and file paths.
- */
-class M3uAssembler {
-    constructor() {
-        this.metadata = {};
-        this.comments = [];
-        this.files = [];
-    }
-
-    /**
-     * Adds a comment to the top of the file, after metadata, but before files.
-     * @param {string} comment
-     */
-    addComment(comment) {
-        if (typeof comment !== "string") return;
-        this.comments.push(comment);
-    }
-
-    /**
-     * Sets a global metadata entry in the .m3u file.
-     * @param {string} directive
-     * @param {string} data
-     */
-    addMetadataEntry(directive, data) {
-        if (typeof directive !== "string") return;
-        if (typeof data !== "string") return;
-        this.metadata[directive] = data;
-    }
-
-    /**
-     * Adds a file to the end of the .m3u file. Does not support per-file metadata.
-     * @param {string} path
-     */
-    addFile(path) {
-        if (typeof path !== "string") return;
-        this.files.push(path);
-    }
-
-    /**
-     * Assembles the info into a .m3u file string.
-     * @returns {string} The .m3u file as a string.
-     */
-    assemble() {
-        let output = "#EXTM3U\n\n";
-
-        for (let [directive, data] of Object.entries(this.metadata)) {
-            output += `#${directive}:${data}\n`;
-        }
-
-        output += "\n";
-
-        for (let comment of this.comments) {
-            output += `#${comment}\n`;
-        }
-
-        output += "\n";
-
-        for (let file of this.files) {
-            output += `${file}\n`;
-        }
-
-        return output;
-    }
-};
+import config from "./config.toml";
 
 let server = Bun.serve({
     routes: {
@@ -97,31 +26,93 @@ let server = Bun.serve({
             let genres = [];
 
             let metadataConfig = {
-                skipCovers: true,
-                skipPostHeaders: true
+                duration: true
             };
 
-            /** @type {Array<Promise<mm.IAudioMetadata>>} */
+            /** @type {Array<Promise<musicMetadata.IAudioMetadata>>} */
             let fileParsePromises = [];
 
             // read and add files, and read the metadata from them
             for (let file of await fs.readdir(`music/${playlist}`, { withFileTypes: true })) {
                 if (!file.isFile()) continue;
-                if (!Bun.file(`${file.parentPath}/${file.name}`).type.startsWith("audio/")) continue;
 
-                assembler.addFile(`${CONFIG.domain}/${encodeURI(`${playlist}/${file.name}`)}`);
+                // skip non audio files
+                let bunFile = Bun.file(`${file.parentPath}/${file.name}`);
+                if (!bunFile.type.startsWith("audio/")) continue;
 
-                fileParsePromises.push(
-                    mm.parseFile(`${file.parentPath}/${file.name}`, metadataConfig)
-                        .catch(console.warn)
-                        .then(metadata => {
-                            if (!metadata) return;
-                            if (metadata.common.artist) artists.push(metadata.common.artist);
-                            if (metadata.common.artists) artists.push(...metadata.common.artists);
-                            if (metadata.common.album) albums.push(metadata.common.album);
-                            if (metadata.common.genre) genres.push(...metadata.common.genre);
-                        })
-                );
+                // check if metadata is cached
+                let cacheFilename = Bun.hash(`${playlist}/${file.name}`).toString(16);
+                let cacheFile = Bun.file(`music/.web-m3u-cache/${cacheFilename}.json`);
+
+                if (await cacheFile.exists()) {
+                    let metadata = await cacheFile.json();
+
+                    // the cache file is made up of m3u tags and other data
+                    // make sure to delete the other data keys so that they don't get improperly added as m3u tags
+                    if (metadata.artists) { artists.push(...metadata.artists); delete metadata.artists; }
+                    if (metadata.artist) { artists.push(metadata.artist); delete metadata.artist; }
+                    if (metadata.album) { albums.push(metadata.album); delete metadata.album; }
+                    if (metadata.genre) { genres.push(...metadata.genre); delete metadata.genre; }
+
+                    assembler.addFile(`${config.Generation.domain}/${encodeURI(`${playlist}/${file.name}`)}`, metadata);
+                } else {
+                    // we don't have cache, add to a list of promises and parse with music-metadata
+                    fileParsePromises.push(
+                        musicMetadata.parseFile(`${file.parentPath}/${file.name}`, metadataConfig)
+                            .then(async metadata => {
+                                let m3uMetadata = {};
+                                if (metadata.common.artist) artists.push(metadata.common.artist);
+                                if (metadata.common.artists) artists.push(...metadata.common.artists);
+                                if (metadata.common.album) albums.push(metadata.common.album);
+                                if (metadata.common.genre) genres.push(...metadata.common.genre);
+
+                                m3uMetadata["EXTINF"] = `${metadata.format.duration}`;
+                                m3uMetadata["EXTBYT"] = `${bunFile.size}`;
+
+                                if (metadata.common.title) {
+                                    if (metadata.common.artist) {
+                                        m3uMetadata["EXTINF"] += `,${metadata.common.artist} - ${metadata.common.title}`;
+                                    } else {
+                                        m3uMetadata["EXTINF"] += `,${metadata.common.title}`;
+                                    }
+                                }
+
+                                if (config.Generation.album_art) {
+                                    let cover = musicMetadata.selectCover(metadata.common.picture);
+                                    if (cover) {
+                                        let coverExtension = mime.getExtension(cover.format);
+                                        let coverFile = Bun.file(`music/.web-m3u-cache/${cacheFilename}.${coverExtension}`);
+                                        if (!await coverFile.exists()) {
+                                            coverFile.write(cover.data);
+                                        }
+
+                                        m3uMetadata["EXTALBUMARTURL"] = `${config.Generation.domain}/.cache/${cacheFilename}.${coverExtension}`;
+                                    }
+                                }
+
+                                assembler.addFile(`${config.Generation.domain}/${encodeURI(`${playlist}/${file.name}`)}`, m3uMetadata);
+
+                                // make sure to write to a cache file afterwards so this slow process doesn't have to be
+                                // repeated again
+                                let cacheData = { ...m3uMetadata };
+
+                                if (metadata.common.artist) cacheData.artist = metadata.common.artist;
+                                if (metadata.common.artists) cacheData.artists = metadata.common.artists;
+                                if (metadata.common.album) cacheData.album = metadata.common.album;
+                                if (metadata.common.genre) cacheData.genre = metadata.common.genre;
+
+                                cacheFile.write(JSON.stringify(cacheData));
+                            })
+                            .catch(exception => {
+                                assembler.addFile(
+                                    `${config.Generation.domain}/${encodeURI(`${playlist}/${file.name}`)}`,
+                                    {
+                                        "WEB-M3U-METADATA-PARSE-EXCEPTION": exception
+                                    }
+                                );
+                            })
+                    );
+                }
             }
 
             // ...wait for all the files to be read for metadata
@@ -131,12 +122,12 @@ let server = Bun.serve({
             artists = [...new Set(artists)];
             genres = [...new Set(genres)];
 
-            assembler.addMetadataEntry("PLAYLIST", cc.capitalCase(playlist));
+            assembler.addMetadataEntry("PLAYLIST", changeCase.capitalCase(playlist));
             assembler.addMetadataEntry("EXTALB", albums.length == 0 ? "Unknown" : albums.length > 4 ? "Various Albums" : albums.join(", "));
             assembler.addMetadataEntry("EXTART", artists.length == 0 ? "Unknown" : artists.length > 4 ? "Various Artists" : artists.join(", "));
             assembler.addMetadataEntry("EXTGENRE", genres.length == 0 ? "Unknown" : genres.length > 4 ? "Various Genres" : genres.join(", "));
 
-            // apply configs after to override autogenerated ones
+            // apply user-configured metadata after to override autogenerated ones
             let configFile = Bun.file(`music/${playlist}/config.json`);
             if (await configFile.exists()) {
                 let config = await configFile.json().catch(console.warn);
@@ -158,13 +149,18 @@ let server = Bun.serve({
             );
         },
 
+        "/.cache/:file": async req => {
+            return new Response(Bun.file(`music/.web-m3u-cache/${sanitize(req.params.file)}`));
+        },
+
         "/:playlist/:file": async req => {
             return new Response(Bun.file(`music/${sanitize(req.params.playlist)}/${sanitize(req.params.file)}`));
         }
     },
 
-    port: CONFIG.port,
-    development: CONFIG.development
+    port: config.Server.port,
+    development: config.Server.development,
+    idleTimeout: 0
 });
 
 console.log(`Hosting web-m3u at port ${server.port}`);

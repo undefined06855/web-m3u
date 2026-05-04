@@ -1,0 +1,7 @@
+[Server]
+port = 8080
+development = true
+
+[Generation]
+domain = "http://localhost:8080"
+album_art = true
