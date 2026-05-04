@@ -7,10 +7,41 @@ import sanitize from "sanitize-filename";
 import M3uAssembler from "./m3uassembler";
 
 import config from "./config.toml";
+import nodePackage from "./package.json";
+
+import index from "./index.html" with { type: "text" };
 
 let server = Bun.serve({
     routes: {
-        "/": Response.redirect("https://cataas.com/cat"),
+        "/": async () => {
+            let innerContent = "";
+            let playlistCount = 0;
+
+            for (let folder of await fs.readdir("music", { withFileTypes: true })) {
+                if (!folder.isDirectory()) continue;
+                if (folder.name == ".web-m3u-cache") continue;
+                innerContent += `<a href="${config.Generation.domain}/${folder.name}.m3u">${changeCase.capitalCase(folder.name)}</a><br/>`;
+                playlistCount++;
+            }
+
+            let rewriter = new HTMLRewriter()
+                .on("div#playlists", {
+                    element(e) { e.setInnerContent(innerContent, { html: true }); }
+                })
+                .on("#playlist-count", {
+                    element(e) { e.setInnerContent(playlistCount); }
+                })
+                .on("#version", {
+                    element(e) { e.setInnerContent(nodePackage.version) }
+                })
+
+            return new Response(
+                rewriter.transform(index),
+                {
+                    headers: { "Content-Type": "text/html" }
+                }
+            );
+        },
 
         "/:playlist": async req => {
             let playlist = sanitize(req.params.playlist)
