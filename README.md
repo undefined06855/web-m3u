@@ -32,8 +32,6 @@ An example `docker-compose.yml` is below:
 services:
   web-m3u:
     image: oven/bun:latest
-    container_name: bun-app
-    working_dir: /app
 
     ports:
       - "8080:8080"
