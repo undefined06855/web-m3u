@@ -22,6 +22,25 @@ let server = Bun.serve({
             for (let folder of await fs.readdir("music", { withFileTypes: true })) {
                 if (!folder.isDirectory()) continue;
                 if (folder.name == ".web-m3u-cache") continue;
+                let cacheFile = Bun.file(`music/.web-m3u-cache/playlist-${Bun.hash(folder.name).toString(16)}.json`);
+
+                if (await cacheFile.exists()) {
+                    let cacheData = await cacheFile.json().catch(exception => {
+                        cacheFile.delete();
+                        console.warn(exception);
+                    });
+
+                    if (!cacheData) continue;
+
+                    if (cacheData.covers) {
+                        shuffler.arrayShuffle(cacheData.covers);
+                        let coverCount = Math.min(cacheData.covers.length, 6);
+                        for (let i = 0; i < coverCount; i++) {
+                            innerContent += `<img src="${cacheData.covers[i]}" alt="playlist cover ${i + 1} for ${changeCase.sentenceCase(folder.name)}" height=64/>`;
+                        }
+                    }
+                }
+
                 innerContent += `<a href="${config.Generation.domain}/${folder.name}.m3u">${changeCase.capitalCase(folder.name)}</a><br/>`;
                 playlistCount++;
             }
@@ -64,6 +83,8 @@ let server = Bun.serve({
             let albums = [];
             let genres = [];
 
+            let covers = [];
+
             let metadataConfig = {
                 duration: true
             };
@@ -84,13 +105,17 @@ let server = Bun.serve({
                 let cacheFile = Bun.file(`music/.web-m3u-cache/${cacheFilename}.json`);
 
                 if (await cacheFile.exists()) {
-                    let metadata = await cacheFile.json();
+                    let metadata = await cacheFile.json().catch(exception => {
+                        cacheFile.delete();
+                        console.warn(exception);
+                    });
 
                     // the cache file is made up of m3u tags and other data
                     // make sure to delete the other data keys so that they don't get improperly added as m3u tags
                     if (metadata.artists) { artists.push(...metadata.artists); delete metadata.artists; }
                     if (metadata.album) { albums.push(metadata.album); delete metadata.album; }
                     if (metadata.genre) { genres.push(...metadata.genre); delete metadata.genre; }
+                    if (metadata.EXTALBUMARTURL) { covers.push(metadata.EXTALBUMARTURL); }
 
                     assembler.addFile(`${config.Generation.domain}/${encodeURIComponent(playlist)}/${encodeURIComponent(file.name)}`, metadata);
                 } else {
@@ -123,11 +148,13 @@ let server = Bun.serve({
                                             coverFile.write(cover.data);
                                         }
 
-                                        m3uMetadata["EXTALBUMARTURL"] = `${config.Generation.domain}/.cache/${cacheFilename}.${coverExtension}`;
+                                        let coverUrl = `${config.Generation.domain}/.cache/${cacheFilename}.${coverExtension}`;
+                                        m3uMetadata["EXTALBUMARTURL"] = coverUrl;
+                                        covers.push(coverUrl);
                                     }
                                 }
 
-                                assembler.addFile(`${config.Generation.domain}/${encodeURIComponent(playlist)}/${encodeURIComponent(file.name)}}`, m3uMetadata);
+                                assembler.addFile(`${config.Generation.domain}/${encodeURIComponent(playlist)}/${encodeURIComponent(file.name)}`, m3uMetadata);
 
                                 // make sure to write to a cache file afterwards so this slow process doesn't have to be
                                 // repeated again
@@ -137,22 +164,15 @@ let server = Bun.serve({
                                 if (metadata.common.album) cacheData.album = metadata.common.album;
                                 if (metadata.common.genre) cacheData.genre = metadata.common.genre;
 
-                                cacheFile.write(JSON.stringify(cacheData));
+                                cacheFile.write(JSON.stringify(cacheData)).catch(console.warn);
                             })
-                            .catch(exception => {
-                                assembler.addFile(
-                                    `${config.Generation.domain}/${encodeURIComponent(playlist)}/${encodeURIComponent(file.name)}`,
-                                    {
-                                        "WEB-M3U-METADATA-PARSE-EXCEPTION": exception
-                                    }
-                                );
-                            })
+                            .catch(console.warn)
                     );
                 }
             }
 
             // ...wait for all the files to be read for metadata
-            await Promise.all(fileParsePromises);
+            await Promise.allSettled(fileParsePromises);
 
             albums = [...new Set(albums)];
             artists = [...new Set(artists)];
@@ -167,11 +187,16 @@ let server = Bun.serve({
             let configFile = Bun.file(`music/${playlist}/config.json`);
             if (await configFile.exists()) {
                 let config = await configFile.json().catch(console.warn);
-                assembler.addMetadataEntry("EXTALB", config.album);
-                assembler.addMetadataEntry("EXTART", config.artist);
-                assembler.addMetadataEntry("EXTGENRE", config.genre);
-                assembler.addMetadataEntry("EXTGRP", config.group);
+                if (config) {
+                    assembler.addMetadataEntry("EXTALB", config.album);
+                    assembler.addMetadataEntry("EXTART", config.artist);
+                    assembler.addMetadataEntry("EXTGENRE", config.genre);
+                    assembler.addMetadataEntry("EXTGRP", config.group);
+                }
             }
+
+            let playlistCache = Bun.file(`music/.web-m3u-cache/playlist-${Bun.hash(playlist).toString(16)}.json`);
+            playlistCache.write(JSON.stringify({ covers, albums, artists, genres }));
 
             assembler.addComment("Generated by web-m3u: https://github.com/undefined06855/web-m3u");
 

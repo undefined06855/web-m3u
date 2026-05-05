@@ -1,15 +1,20 @@
 # web-m3u Changelog
+## v1.0.5
+- Added album covers in the playlist list and cached playlist information like artists and albums
+- Improved error handling in a bunch of places
+- Removed full stops in the changelog
+
 ## v1.0.4
 - Enforce CRLF line endings instead of just LF
 
 ## v1.0.3
-- Added a link to the GitHub repository on the website.
+- Added a link to the GitHub repository on the website
 
 ## v1.0.2
-- Changed `encodeURI` calls to `encodeURIComponent` to encode more url-unsafe characters.
+- Changed `encodeURI` calls to `encodeURIComponent` to encode more url-unsafe characters
 
 ## v1.0.1
-- Added shuffling by appending -shuffle to the filename, and make songs guaranteed to be sorted in alphabetical order.
+- Added shuffling by appending -shuffle to the filename, and make songs guaranteed to be sorted in alphabetical order
 
 ## v1.0.0
-- First version of web-m3u.
+- First version of web-m3u!
