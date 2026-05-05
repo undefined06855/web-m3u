@@ -19,6 +19,8 @@ let server = Bun.serve({
             let innerContent = "";
             let playlistCount = 0;
 
+            // this is uhh pretty temporary
+
             for (let folder of await fs.readdir("music", { withFileTypes: true })) {
                 if (!folder.isDirectory()) continue;
                 if (folder.name == ".web-m3u-cache") continue;
