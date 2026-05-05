@@ -1,4 +1,7 @@
 # web-m3u Changelog
+## v1.0.4
+- Enforce CRLF line endings instead of just LF
+
 ## v1.0.3
 - Added a link to the GitHub repository on the website.
 

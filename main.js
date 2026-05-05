@@ -3,6 +3,7 @@ import * as fs from "fs/promises";
 import * as changeCase from "change-case";
 import * as musicMetadata from "music-metadata";
 import * as shuffler from "array-shuffle";
+import * as crlf from "crlf-normalize";
 import mime from "mime";
 import sanitize from "sanitize-filename";
 import M3uAssembler from "./m3uassembler";
@@ -181,7 +182,8 @@ let server = Bun.serve({
             }
 
             return new Response(
-                assembler.assemble(), {
+                // wikipedia "some devices only accept line breaks represented as CR LF, but do not recognize a single LF."
+                crlf.crlf(assembler.assemble(), crlf.CRLF), {
                     "status": 200,
                     "headers": {
                         "Content-Type": "text/plain"

@@ -2,7 +2,7 @@
   "name": "web-m3u",
   "module": "main.js",
   "type": "module",
-  "version": "v1.0.3",
+  "version": "v1.0.4",
   "private": true,
   "devDependencies": {
     "@types/bun": "latest"
@@ -13,6 +13,7 @@
   "dependencies": {
     "array-shuffle": "^4.1.0",
     "change-case": "^5.4.4",
+    "crlf-normalize": "^1.0.20",
     "mime": "^4.1.0",
     "music-metadata": "^11.12.3",
     "sanitize-filename": "^1.6.4"
