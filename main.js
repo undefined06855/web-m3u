@@ -133,7 +133,7 @@ let server = Bun.serve({
                                 m3uMetadata["EXTINF"] = `${metadata.format.duration}`;
                                 m3uMetadata["EXTBYT"] = `${bunFile.size}`;
 
-                                let filename = file.name.split(".").slice(0, -1);
+                                let filename = file.name.split(".").slice(0, -1).join(".");
                                 let split = filename.split(" - ");
                                 let fileArtist = split.shift();
                                 let fileTitle = split.join(" - ");
