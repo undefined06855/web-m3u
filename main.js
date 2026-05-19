@@ -133,13 +133,20 @@ let server = Bun.serve({
                                 m3uMetadata["EXTINF"] = `${metadata.format.duration}`;
                                 m3uMetadata["EXTBYT"] = `${bunFile.size}`;
 
-                                if (metadata.common.title) {
-                                    if (metadata.common.artists) {
-                                        m3uMetadata["EXTINF"] += `,${metadata.common.artists.join(", ")} - ${metadata.common.title}`;
-                                    } else {
-                                        m3uMetadata["EXTINF"] += `,${metadata.common.title}`;
-                                    }
+                                let filename = file.name.split(".").slice(0, -1);
+                                let split = filename.split(" - ");
+                                let fileArtist = split.shift();
+                                let fileTitle = split.join(" - ");
+
+                                if (fileTitle.length == 0) {
+                                    fileArtist = "Unknown";
+                                    fileTitle = filename;
                                 }
+
+                                let title = metadata.common.title ?? fileTitle;
+                                let artist = metadata.common.artists.join(", ") ?? fileArtist;
+
+                                m3uMetadata["EXTINF"] += `,${artist} - ${title}`;
 
                                 if (config.Generation.album_art) {
                                     let cover = musicMetadata.selectCover(metadata.common.picture);

@@ -19,12 +19,15 @@ store album covers and cache song metadata. If a song is modified but the same f
 removed to regenerate metadata.
 - The first time you fetch the playlist it may take a **very long time** to respond (especially for large playlists) as
 it writes album covers to disk and parses song metadata! Subsequent requests should be extremely fast, since metadata
-and album covers will already be cached. It takes around **8 seconds** to parse a 220 song playlist on my server, but only
-**100ms** after everything is cached (including networking). This may take longer for servers with slow i/o (though Bun
-does read files pretty efficiently).
-- You can navigate to "playlistname&#x200B;**-shuffle**&#x200B;.m3u" to generate an m3u that is automatically shuffled! Else, playlists
-are sorted in alphabetical order of the filename.
-- The .m3u extension is optional, "playlistname" and "playlistname.m3u" will both return the same results.
+and album covers will already be cached. It takes around **8 seconds** to parse a 220 song playlist on my server, but
+only **100ms** after everything is cached (including networking). This may take longer for servers with slow i/o (though
+Bun does read files pretty efficiently).
+- You can navigate to "playlistname&#x200B;**-shuffle**&#x200B;.m3u" to generate an m3u that is automatically shuffled!
+Else, playlists are sorted in alphabetical order of the filename.
+- The .m3u extension is optional, "playlistname" and "playlistname.m3u" will both return the same results. (and you can
+fetch .m3u8, though it will return the same content as .m3u)
+- Songs with no title will fallback to the filename, without the extension, for the song title (splitting the artist
+based on a hyphen, e.g. "Anthemics - when we had everything.mp3" would become when we had everything by Anthemics)
 
 Many apps should be able to read `.m3u` files (including just Windows Media Player), though I've found (on mobile) VLC
 works the best, and shows album covers from the `EXTALBUMARTURL` directive:

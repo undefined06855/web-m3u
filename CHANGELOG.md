@@ -1,4 +1,7 @@
 # web-m3u Changelog
+## v1.0.6
+- Added a fallback to use the song's filename if there's not enough song metadata
+
 ## v1.0.5
 - Added album covers in the playlist list and cached playlist information like artists and albums
 - Improved error handling in a bunch of places
