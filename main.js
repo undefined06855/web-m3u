@@ -143,8 +143,8 @@ let server = Bun.serve({
                                     fileTitle = filename;
                                 }
 
-                                let title = metadata.common.title ?? fileTitle;
-                                let artist = metadata.common.artists.join(", ") ?? fileArtist;
+                                let title = metadata.common.title ? metadata.common.title : fileTitle;
+                                let artist = metadata.common.artists ? metadata.common.artists.join(", ") : fileArtist;
 
                                 m3uMetadata["EXTINF"] += `,${artist} - ${title}`;
 
