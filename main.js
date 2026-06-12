@@ -10,8 +10,21 @@ import M3uAssembler from "./m3uassembler";
 
 import config from "./config.toml";
 import nodePackage from "./package.json";
+import commonReplacements from "./common-replacements.json";
 
 import index from "./index.html" with { type: "text" };
+
+/**
+ * @param {string} name
+ */
+function capitalCaseWithCommonReplacements(name) {
+    name = changeCase.capitalCase(name);
+    for (let [ from, to ] of Object.entries(commonReplacements.replacements)) {
+        name = name.replaceAll(from, to);
+    }
+
+    return name;
+}
 
 let server = Bun.serve({
     routes: {
@@ -43,7 +56,7 @@ let server = Bun.serve({
                     }
                 }
 
-                innerContent += `<a href="${config.Generation.domain}/${folder.name}.m3u">${changeCase.capitalCase(folder.name)}</a><br/>`;
+                innerContent += `<a href="${config.Generation.domain}/${folder.name}.m3u">${capitalCaseWithCommonReplacements(folder.name)}</a><br/>`;
                 playlistCount++;
             }
 
@@ -187,7 +200,7 @@ let server = Bun.serve({
             artists = [...new Set(artists)];
             genres = [...new Set(genres)];
 
-            assembler.addMetadataEntry("PLAYLIST", changeCase.capitalCase(playlist));
+            assembler.addMetadataEntry("PLAYLIST", capitalCaseWithCommonReplacements(playlist));
             assembler.addMetadataEntry("EXTALB", albums.length == 0 ? "Unknown" : albums.length > 4 ? "Various Albums" : albums.join(", "));
             assembler.addMetadataEntry("EXTART", artists.length == 0 ? "Unknown" : artists.length > 4 ? "Various Artists" : artists.join(", "));
             assembler.addMetadataEntry("EXTGENRE", genres.length == 0 ? "Unknown" : genres.length > 4 ? "Various Genres" : genres.join(", "));

@@ -1,0 +1,10 @@
+{
+    "replacements": {
+        "Ost": "OST",
+        "Hq": "HQ",
+        "Tv": "TV",
+
+        "And": "and",
+        "With": "with"
+    }
+}
