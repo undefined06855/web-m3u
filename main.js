@@ -254,4 +254,4 @@ let server = Bun.serve({
     idleTimeout: 0
 });
 
-console.log(`Hosting web-m3u at port ${server.port}`);
+console.log(`Hosting web-m3u at port ${server.port} (${config.Generation.domain})`);
