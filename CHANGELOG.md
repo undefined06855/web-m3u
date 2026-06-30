@@ -1,7 +1,10 @@
 # web-m3u Changelog
+## v1.0.8
+- Added the ability to sort by date added with -date
+
 ## v1.0.7
 - Added common replacements for incorrect capitalisation (e.g. "OST" became "Ost")
-- Addd a log for the configured domain in the startup log
+- Added a log for the configured domain in the startup log
 
 ## v1.0.6
 - Added a fallback to use the song's filename if there's not enough song metadata

@@ -22,12 +22,20 @@ it writes album covers to disk and parses song metadata! Subsequent requests sho
 and album covers will already be cached. It takes around **8 seconds** to parse a 220 song playlist on my server, but
 only **100ms** after everything is cached (including networking). This may take longer for servers with slow i/o (though
 Bun does read files pretty efficiently).
-- You can navigate to "playlistname&#x200B;**-shuffle**&#x200B;.m3u" to generate an m3u that is automatically shuffled!
 Else, playlists are sorted in alphabetical order of the filename.
 - The .m3u extension is optional, "playlistname" and "playlistname.m3u" will both return the same results. (and you can
 fetch .m3u8, though it will return the same content as .m3u)
 - Songs with no title will fallback to the filename, without the extension, for the song title (splitting the artist
 based on a hyphen, e.g. "Anthemics - when we had everything.mp3" would become when we had everything by Anthemics)
+
+## Suffixes
+
+web-m3u supports suffixes to sort the playlist server-side by some option. Right now, there are two suffixes:
+- "shuffle": Shuffles the playlist.
+- "date": Sorts the playlist by date added (last modified date).
+
+You can navigate to "playlistname&#x200B;**-suffix**&#x200B;.m3u" to generate an m3u with that sort type (e.g.
+http://localhost:8080/myplaylist-shuffle.m3u).
 
 Many apps should be able to read `.m3u` files (including just Windows Media Player), though I've found (on mobile) VLC
 works the best, and shows album covers from the `EXTALBUMARTURL` directive:
